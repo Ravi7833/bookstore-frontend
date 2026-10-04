@@ -3,7 +3,7 @@ import axios from 'axios';
 
 const API_BASE_URL = 'https://app-bookstore-backend-b3b8f4eabrfja0d3.southeastasia-01.azurewebsites.net';
 
-// Enable cookies across cross-origin requests for session persistence
+// Maintain cross-origin session cookies
 axios.defaults.withCredentials = true;
 
 function App() {
@@ -12,7 +12,7 @@ function App() {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    // Fetch books inventory
+    // Fetch inventory books
     axios.get(`${API_BASE_URL}/api/books`)
       .then(res => {
         setBooks(res.data);
@@ -23,15 +23,15 @@ function App() {
         setLoading(false);
       });
 
-    // Check if user is logged in via OAuth callback or active session
-    axios.get(`${API_BASE_URL}/auth/google/callback`)
+    // Check current authentication status
+    axios.get(`${API_BASE_URL}/api/me`)
       .then(res => {
         if (res.data && res.data.user) {
           setUser(res.data.user);
         }
       })
       .catch(() => {
-        // User not logged in, remain in guest mode
+        // Guest user
       });
   }, []);
 
@@ -41,22 +41,18 @@ function App() {
 
   const handleAddToCart = (bookId) => {
     axios.post(`${API_BASE_URL}/api/cart`, { bookId, quantity: 1 })
-      .then(res => {
-        alert('Book added to cart successfully!');
-      })
+      .then(() => alert('Book added to cart successfully!'))
       .catch(err => {
         if (err.response && err.response.status === 401) {
-          alert('Please login with Google first to add items to your cart.');
+          alert('Please login with Google first to add items to cart.');
         } else {
-          alert('Failed to update cart. Please try again.');
+          alert('Error updating cart.');
         }
       });
   };
 
   return (
     <div style={{ padding: '2rem', fontFamily: 'system-ui, sans-serif', maxWidth: '1000px', margin: '0 auto' }}>
-      
-      {/* Header Section */}
       <header style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '2rem', borderBottom: '1px solid #eee', paddingBottom: '1rem' }}>
         <div>
           <h1 style={{ margin: 0 }}>📚 Cloud Bookstore</h1>
@@ -70,10 +66,10 @@ function App() {
                 <img 
                   src={user.picture} 
                   alt={user.name} 
-                  style={{ width: '36px', height: '36px', borderRadius: '50%' }} 
+                  style={{ width: '38px', height: '38px', borderRadius: '50%' }} 
                 />
               )}
-              <span style={{ fontWeight: '500' }}>{user.name}</span>
+              <span style={{ fontWeight: '600', fontSize: '1rem' }}>{user.name}</span>
             </div>
           ) : (
             <button
@@ -86,8 +82,7 @@ function App() {
                 borderRadius: '6px',
                 fontSize: '0.95rem',
                 fontWeight: 'bold',
-                cursor: 'pointer',
-                boxShadow: '0 2px 4px rgba(0,0,0,0.1)'
+                cursor: 'pointer'
               }}
             >
               Login with Google
@@ -96,7 +91,6 @@ function App() {
         </div>
       </header>
 
-      {/* Main Content / Inventory */}
       {loading ? (
         <p>Loading books from cloud database...</p>
       ) : (
